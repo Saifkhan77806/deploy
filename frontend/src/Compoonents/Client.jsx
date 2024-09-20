@@ -10,6 +10,7 @@ import axios from 'axios'
 import Slide from './Slide'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/auth'
+import Cookies from 'js-cookie'
 
 const Client = () => {
 
@@ -21,6 +22,7 @@ const Client = () => {
 
   useEffect(()=>{
     axios.get("https://backend-kappa-drab.vercel.app/cookie").then((res)=>{
+        console.log(Cookies.get("googleauthsession"))
         console.log(res.data)
       }).catch((err)=>{
         console.log("log",err)

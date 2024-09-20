@@ -14,6 +14,10 @@ require("./db")
 const { v4: uuidv4 } = require('uuid');
 let otp
 
+app.use(cookieParser())
+
+
+
 // initialiePassport(passport);
 passport.use(new LocalStrategy({
     usernameField: 'email',  // Using 'email' instead of 'username'
@@ -75,12 +79,12 @@ app.options('*', (req, res) => {
 app.use(cookieSession({
     name: "googleauthsession",
     keys: ["key1", "key2"],
-    saveUninitialized: false,
+    // saveUninitialized: false,
     expires: new Date(Date.now() + (60 * 24 * 3600000)),
-    resave: false,
+    // resave: false,
     cookie: {
         secure: true,  // Set to true in production if using HTTPS
-        httpOnly: true,
+        // httpOnly: true,
         sameSite: 'None'  // Allow cross-origin requests
     }
 }))
@@ -134,7 +138,7 @@ app.get('/linkedin/callback', passport.authenticate('linkedin', {
 
 app.get('/linkedin/success', (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', 'https://frontend-psi-gray.vercel.app');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Credentials', '*');
     
     if (!req.user) {
         return res.redirect('/linkedin/failure');
@@ -153,7 +157,7 @@ app.get('/linkedin/failure', (req, res) => {
 
 app.get("/data", (req, res) => {
     // console.log("check",req.user)
-    res.status(200).send(req.user)
+    res.status(200).json({data:req.user})
 })
 
 app.get("/userid/:id", async (req, res) => {

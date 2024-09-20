@@ -19,7 +19,7 @@ import { Target } from "lucide-react";
     const [userPassword,setUserPassword] = useState()
 
     const submit = () => {
-      axios.post("https://backend-ashen-gamma.vercel.app/manual-login", {
+      axios.post("https://backend-kappa-drab.vercel.app/manual-login", {
           email: userEmail,
           password: userPassword
       }, {
@@ -59,7 +59,7 @@ import { Target } from "lucide-react";
             Login with google
           </Button></a>
           <span className="text-center -my-4 text-gray-500">or</span>
-         <a href="https://backend-ashen-gamma.vercel.app/linkedin"><Button className="mt-2 bg-light rounded-full bg-gray-500" fullWidth>
+         <a href="https://backend-kappa-drab.vercel.app/linkedin"><Button className="mt-2 bg-light rounded-full bg-gray-500" fullWidth>
             Login with Linkedin
           </Button></a>
           <span className="text-center -my-4 text-gray-500">or</span>

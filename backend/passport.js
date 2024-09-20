@@ -1,7 +1,8 @@
 const passport = require('passport')
 const GoogleStrategy = require('passport-google-oauth2').Strategy
 const LinkedInStrategy = require('passport-linkedin-oauth2').Strategy;
-const User = require('./schema/UserSchema')
+const User = require('./schema/UserSchema');
+
 
 passport.serializeUser((user,done)=>{
     done(null, user)
@@ -51,7 +52,7 @@ async function(request, accesstoken, refreshtoken, profile, done){
 passport.use(new LinkedInStrategy({
     clientID: "77z4ld77ttpzdk",
     clientSecret: "N3qNvscT73VYJ7we",
-    callbackURL: 'https://backend-ashen-gamma.vercel.app/linkedin/callback',
+    callbackURL: 'https://backend-kappa-drab.vercel.app/linkedin/callback',
     scope: ['openid', 'profile', 'w_member_social', 'email'],
     profileUrl: 'https://api.linkedin.com/v2/me'
   },

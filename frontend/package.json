@@ -22,6 +22,7 @@
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "flowbite-react": "^0.10.1",
+    "js-cookie": "^3.0.5",
     "lucide-react": "^0.436.0",
     "mongoose": "^8.6.1",
     "passport-local": "^1.0.0",
