@@ -6,6 +6,7 @@ const app = express()
 const cors = require('cors')
 const User = require('./schema/UserSchema')
 const cookieParser = require('cookie-parser')
+const bodyParser = require('body-parser')
 const { sendmail } = require('./sendOtp')
 const otpGenerator = require('otp-generator');
 const bcrypt = require('bcrypt')
@@ -15,9 +16,6 @@ const { v4: uuidv4 } = require('uuid');
 let otp
 
 app.use(cookieParser())
-
-
-
 // initialiePassport(passport);
 passport.use(new LocalStrategy({
     usernameField: 'email',  // Using 'email' instead of 'username'
@@ -28,14 +26,13 @@ passport.use(new LocalStrategy({
         if (!user) {
             return done(null, false, { message: 'Incorrect email.' });
         }
-
-        const isMatch = await bcrypt.compare(password,user.password)
+        const isMatch = await bcrypt.compare(password, user.password)
         console.log(isMatch)
-        if(isMatch){
+        if (isMatch) {
             console.log("check")
             console.log(user)
-            return done(null, {type: user, logtype: "login"})
-        }else{
+            return done(null, { type: user, logtype: "login" })
+        } else {
             return done(null, false, { message: 'login failed.' });
 
         }
@@ -50,19 +47,18 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser((id, done) => {
-    User.findById(id, (err, user) => {
-        done(err, user);
-    });
+   done(null, id)
 });
 
+// app.use(cors({
+//     origin: 'https://frontend-psi-gray.vercel.app',  // Frontend URL
+//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // Allowed HTTP methods
+//     allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
+//     optionsSuccessStatus: 200,
+//     credentials: true // Allow credentials (cookies, auth headers, etc.)
+// }));
 
-
-app.use(cors({
-    origin: 'https://frontend-psi-gray.vercel.app',  // Frontend URL
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // Allowed HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
-    credentials: true // Allow credentials (cookies, auth headers, etc.)
-}));
+app.use(cors())
 
 
 app.options('*', (req, res) => {
@@ -85,7 +81,7 @@ app.use(cookieSession({
     cookie: {
         secure: true,  // Set to true in production if using HTTPS
         // httpOnly: true,
-        sameSite: 'None'  // Allow cross-origin requests
+        sameSite: 'none'  // Allow cross-origin requests
     }
 }))
 
@@ -137,9 +133,9 @@ app.get('/linkedin/callback', passport.authenticate('linkedin', {
 }))
 
 app.get('/linkedin/success', (req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', 'https://frontend-psi-gray.vercel.app');
-    res.setHeader('Access-Control-Allow-Credentials', '*');
-    
+    // res.setHeader('Access-Control-Allow-Origin', 'https://frontend-psi-gray.vercel.app');
+    // res.setHeader('Access-Control-Allow-Credentials', '*');
+
     if (!req.user) {
         return res.redirect('/linkedin/failure');
     }
@@ -157,7 +153,7 @@ app.get('/linkedin/failure', (req, res) => {
 
 app.get("/data", (req, res) => {
     // console.log("check",req.user)
-    res.status(200).json({data:req.user})
+    res.status(200).json({ data: req.user })
 })
 
 app.get("/userid/:id", async (req, res) => {
@@ -184,30 +180,30 @@ app.post("/update-user/:id", async (req, res) => {
 
 })
 
-app.post("/send-otp", async(req,res)=>{
-    const {email} = req.body;
+app.post("/send-otp", async (req, res) => {
+    const { email } = req.body;
 
-    const user = await User.findOne({email});
+    const user = await User.findOne({ email });
 
-    if(!user){
-        res.status(200).send({msg:"invalid Email"});
-    }else{
+    if (!user) {
+        res.status(200).send({ msg: "invalid Email" });
+    } else {
         otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false });
         console.log(`otp from mail side :- ${otp}`);
         sendmail(otp, email);
-        res.status(200).send({msg: user._id})
+        res.status(200).send({ msg: user._id })
     }
 })
 
-app.post("/verfiy-otp", async(req,res)=>{
-    const {userOtp} = req.body;
-    if(userOtp==otp){
-          success = true;
-          console.log(success);  
-       res.status(200).send({success})
-    }else{
+app.post("/verfiy-otp", async (req, res) => {
+    const { userOtp } = req.body;
+    if (userOtp == otp) {
+        success = true;
+        console.log(success);
+        res.status(200).send({ success })
+    } else {
         console.log("invalid otp");
-        res.status(200).send({msg: "invalid otp"});
+        res.status(200).send({ msg: "invalid otp" });
     }
 })
 
@@ -246,34 +242,34 @@ app.get('/logout', (req, res, next) => {
     });
 })
 
-app.post("/register",async (req,res)=>{
-    const {email,profile,country,firstName,lastName,phone, password} = req.body
+app.post("/register", async (req, res) => {
+    const { email, profile, country, firstName, lastName, phone, password } = req.body
     const ids = uuidv4();
 
-    
 
-    const userExist = await User.findOne({email});
 
-    if(userExist){
-        return res.status(404).send({success: false, msg: "user already exist"})
+    const userExist = await User.findOne({ email });
+
+    if (userExist) {
+        return res.status(404).send({ success: false, msg: "user already exist" })
     }
 
     const hashedPss = await bcrypt.hash(password, 10)
 
-   const userData =  await User({name: "manualUser",email,profile,id: ids,provider: "manual",country,firstName,lastName,phone, password: hashedPss})
+    const userData = await User({ name: "manualUser", email, profile, id: ids, provider: "manual", country, firstName, lastName, phone, password: hashedPss })
 
-   await userData.save()
+    await userData.save()
 
-   res.status(200).json({success: true, msg: "user saved successfully", logtyp: "register"})
+    res.status(200).json({ success: true, msg: "user saved successfully", logtyp: "register" })
 
 })
 
 
 app.post('/manual-login', (req, res, next) => {
-    try{
+    try {
         res.setHeader("Access-Control-Allow-Methods", "*")
         console.log('Request received on /manual-login');  // Debug log to see if route is hit
-        passport.authenticate('local', function(err, user, info) {
+        passport.authenticate('local', function (err, user, info) {
             if (err) {
                 console.log('Error during authentication:', err);  // Log errors
                 return next(err);
@@ -282,26 +278,26 @@ app.post('/manual-login', (req, res, next) => {
                 console.log('invalid credentials:', info.message);  // Log failure reason
                 return res.redirect('/login/failure');
             }
-            req.logIn(user, function(err) {
+            req.logIn(user, function (err) {
                 if (err) {
                     console.log('Error during login:', err);  // Log login error
                     return next(err);
                 }
                 console.log('Authentication successful');  // Log success
-               return res.status(200).send({msg: "logged"})
+                return res.status(200).send({ msg: "logged" })
             });
         })(req, res, next);
-    }catch(err){
+    } catch (err) {
         console.log(err)
     }
 });
 
 
-app.post('/verified/:email', async (req,res)=>{
-    const {email} = req.params
-    await User.findOneAndUpdate({email}, {verified: true}).then(()=>{
-        res.status(200).send({msg: "user verified"})
-    }).catch((err)=>{
+app.post('/verified/:email', async (req, res) => {
+    const { email } = req.params
+    await User.findOneAndUpdate({ email }, { verified: true }).then(() => {
+        res.status(200).send({ msg: "user verified" })
+    }).catch((err) => {
         console.log(err)
     })
 });
@@ -311,10 +307,113 @@ app.get('/login/failure', (req, res) => {
     res.status(401).send("Login failed");
 });
 
-app.get("/cookie",(req,res)=>{
-    res.status(200).json({ regsiteration: "resgister"});
+app.get("/cookie", (req, res) => {
+
+    app.use((req, res, next) => {
+        console.log('Session ID:', req.sessionID);
+        console.log('Session Data:', req.session);
+        console.log('User:', req.user);
+        next();
+    });
+    
+
+    res.status(200).json({ sessionID: req.sessionID, session: req.session, user: req.user });
 })
 
+
+app.post("/texts", async(req,res)=>{
+    // res.setHeader('Access-Control-Allow-Origin', 'https://frontend-psi-gray.vercel.app');
+    // res.setHeader('Access-Control-Allow-Credentials', "*");
+
+    // const {cat} = req.params
+
+    leonardoai.auth('80849ed3-cfad-4f6e-b241-8b15cf35178a');
+leonardoai.createGeneration({
+  alchemy: true,
+  height: 768,
+  modelId: 'b24e16ff-06e3-43eb-8d33-4416c2d75876',
+  num_images: 2,
+  presetStyle: 'DYNAMIC',
+  prompt: "cat",
+  width: 1024
+}).then(async({ data }) => {
+
+    console.log(data.sdGenerationJob.generationId)
+
+    await User.findOneAndUpdate({email: "khansaif86783@gmail.com"}, {id: data.sdGenerationJob.generationId}).then(()=>{
+        console.log("id stored successfully")
+        res.status(200).send({data: "id stored successfully"})
+}).catch((err)=>{
+    console.log("err from stroing error", err)
+})
+})
+
+})
+
+
+app.post("/text",async (req,res)=>{
+    res.setHeader('Access-Control-Allow-Origin', 'https://frontend-psi-gray.vercel.app');
+    res.setHeader('Access-Control-Allow-Credentials', "*");
+
+leonardoai.auth('80849ed3-cfad-4f6e-b241-8b15cf35178a');
+leonardoai.createGeneration({
+  alchemy: true,
+  height: 768,
+  modelId: 'b24e16ff-06e3-43eb-8d33-4416c2d75876',
+  num_images: Number(noImG),
+  presetStyle: 'DYNAMIC',
+  prompt: msg,
+  width: 1024
+})
+  .then(async({ data }) => {
+
+    console.log(data.sdGenerationJob.generationId)
+
+    await User.findOneAndUpdate({email: "khansaif86783@gmail.com"}, {id: data.sdGenerationJob.generationId}).then(()=>{
+        console.log("id stored successfully")
+        res.status(200).send({data: "id stored successfully"})
+    }).catch((err)=>{
+        console.log("err in updating",err)
+    })
+  }
+   
+
+)
+  .catch(err => console.error(err));
+})
+
+
+app.get("/re",async(req,res)=>{
+
+    const id = await User.findOne({email: "khansaif86783@gmail.com"})
+
+    console.log("from id",id.id)
+    const ids = id.id
+
+leonardoai.auth('80849ed3-cfad-4f6e-b241-8b15cf35178a');
+let statu = "PENDING"
+// while(statu === "PENDING"){
+    console.log(statu, "epep")
+    leonardoai.getGenerationById({id: ids})
+    .then(({ data }) => {
+        // console.log({id})
+        console.log(data.generations_by_pk.status)
+    
+         statu = data.generations_by_pk.status
+         console.log(statu)
+    
+        if(data.generations_by_pk.status=="COMPLETE"){
+          statu = "COMPLETE"
+        }
+    
+        // if(data.status)
+        res.status(200).json({data})
+    }
+    )
+    .catch(err => console.error(err));
+// }
+
+})
 
 
 
