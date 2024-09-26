@@ -10,11 +10,27 @@ const bodyParser = require('body-parser')
 const { sendmail } = require('./sendOtp')
 const otpGenerator = require('otp-generator');
 const bcrypt = require('bcrypt')
+const path = require('path')
+require('dotenv').config()
 require('./passport')
 require("./db")
 const { v4: uuidv4 } = require('uuid');
 let otp
-
+const __dirname1 = path.resolve()
+console.log(path.join("F:\\sample-project\\deploymentJwell", "frontend", "dist", "index.html"))
+if(process.env.NODE_ENV=== "production"){
+    app.use(express.static(path.join("F:\\sample-project\\deploymentJwell", "frontend", "dist")))
+    app.get("*", (req,res)=>{
+        res.sendFile(path.join("F:\\sample-project\\deploymentJwell", "frontend", "dist", "index.html"))
+    })
+}
+else{
+    app.get('/', (req, res) => {
+        res.send(
+            "<button><a href='/auth'>Login with google</a></button><br/><button><a href='/linkedin'>Login with linkedin</a></button> <br /> <button><a href='/logout'>Logout</a></button><button><a href='/logout'>Logout</a></button><button><a href='/auth'>Login with google</a></button><button><a href='/auth'>Login hello google saif</a></button>"
+        )
+    })
+}
 app.use(cookieParser())
 // initialiePassport(passport);
 passport.use(new LocalStrategy({
@@ -50,19 +66,18 @@ passport.deserializeUser((id, done) => {
    done(null, id)
 });
 
-// app.use(cors({
-//     origin: 'https://frontend-psi-gray.vercel.app',  // Frontend URL
-//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // Allowed HTTP methods
-//     allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
-//     optionsSuccessStatus: 200,
-//     credentials: true // Allow credentials (cookies, auth headers, etc.)
-// }));
+app.use(cors({
+    origin: process.env.FROTNEND_URL,  // Frontend URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // Allowed HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
+    optionsSuccessStatus: 200,
+    credentials: true // Allow credentials (cookies, auth headers, etc.)
+}));
 
-app.use(cors())
 
 
 app.options('*', (req, res) => {
-    res.header('Access-Control-Allow-Origin', 'https://frontend-psi-gray.vercel.app');
+    res.header('Access-Control-Allow-Origin', process.env.FROTNEND_URL);
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true');
@@ -107,11 +122,7 @@ app.use(express.json())
 
 // Other middleware and routes...
 
-app.get('/', (req, res) => {
-    res.send(
-        "<button><a href='/auth'>Login with google</a></button><br/><button><a href='/linkedin'>Login with linkedin</a></button> <br /> <button><a href='/logout'>Logout</a></button><button><a href='/logout'>Logout</a></button><button><a href='/auth'>Login with google</a></button><button><a href='/auth'>Login hello google</a></button>"
-    )
-})
+
 
 app.get('/auth', passport.authenticate('google', {
     scope: ["email", "profile"]
@@ -123,17 +134,17 @@ app.get('/linkedin', passport.authenticate('linkedin'));
 
 
 app.get('/auth/callback', passport.authenticate("google", {
-    successRedirect: "https://frontend-psi-gray.vercel.app/",
+    successRedirect: `${process.env.FROTNEND_URL}/`,
     failureRedirect: "/auth/callback/failure"
 }))
 
 app.get('/linkedin/callback', passport.authenticate('linkedin', {
-    successRedirect: "https://frontend-psi-gray.vercel.app/",
+    successRedirect: `${process.env.FROTNEND_URL}/`,
     failureRedirect: "/linkedin/failure"
 }))
 
 app.get('/linkedin/success', (req, res) => {
-    // res.setHeader('Access-Control-Allow-Origin', 'https://frontend-psi-gray.vercel.app');
+    // res.setHeader('Access-Control-Allow-Origin', process.env.FROTNEND_URL);
     // res.setHeader('Access-Control-Allow-Credentials', '*');
 
     if (!req.user) {
@@ -220,7 +231,7 @@ app.post('/setinfo/:id', async (req, res) => {
     const { firstName, lastName, password, phone, country } = req.body
 
     res.setHeader("Access-Control-Allow-Credentials", "*")
-    res.setHeader("Access-Control-Allow-Origin", "https://frontend-psi-gray.vercel.app");
+    res.setHeader("Access-Control-Allow-Origin", process.env.FROTNEND_URL);
 
     const hashedPss = await bcrypt.hash(password, 10)
 
@@ -238,7 +249,7 @@ app.get('/logout', (req, res, next) => {
         if (err) {
             return next(err)
         }
-        res.redirect('https://frontend-psi-gray.vercel.app/login')
+        res.redirect(`${process.env.FROTNEND_URL}/login`)
     });
 })
 
@@ -322,7 +333,7 @@ app.get("/cookie", (req, res) => {
 
 
 app.post("/texts", async(req,res)=>{
-    // res.setHeader('Access-Control-Allow-Origin', 'https://frontend-psi-gray.vercel.app');
+    // res.setHeader('Access-Control-Allow-Origin', process.env.FROTNEND_URL);
     // res.setHeader('Access-Control-Allow-Credentials', "*");
 
     // const {cat} = req.params
@@ -352,7 +363,7 @@ leonardoai.createGeneration({
 
 
 app.post("/text",async (req,res)=>{
-    res.setHeader('Access-Control-Allow-Origin', 'https://frontend-psi-gray.vercel.app');
+    res.setHeader('Access-Control-Allow-Origin', process.env.FROTNEND_URL);
     res.setHeader('Access-Control-Allow-Credentials', "*");
 
 leonardoai.auth('80849ed3-cfad-4f6e-b241-8b15cf35178a');
